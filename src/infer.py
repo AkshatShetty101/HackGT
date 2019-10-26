@@ -12,6 +12,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import datetime
 
 classes = {
     0: '__background__', 1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle',
@@ -35,7 +36,7 @@ frame = []
 table_coords = []
 chair_coords = []
 people_coords = []
-
+chair_map = {}
 tables = []
 
 
@@ -78,7 +79,7 @@ def mapChairToTable():
     not_orphans = set()
     for table in table_coords:
         temp = {'centroid': centroid(
-            *table[0: 4]), 'chairs': [], 'confidence': table[4]}
+            *table[0: 4]), 'chairs': [], "num": 0, 'confidence': table[4]}
         min = 20000000000
         for chair in chair_coords:
             gap = dist(*temp['centroid'],
@@ -97,7 +98,8 @@ def mapChairToTable():
         tables.append(temp)
     if len(not_orphans)-len(chair_coords) == 0:
         return
-    orphan_table = {'centroid': [-1, -1], 'chairs': [], 'confidence': -1}
+    orphan_table = {'centroid': [-1, -1],
+                    "num": -1, 'chairs': [], 'confidence': -1}
     for chair in chair_coords:
         c = centroid(chair[0], chair[1], chair[2], chair[3])
         if not str(c[0])+" "+str(c[1]) in not_orphans:
@@ -121,6 +123,7 @@ def mapPeopleToChairs():
                         abs(c[1]-chair['centroid'][1]) < 50:
                     chair['occupied'] = True
                     flag = True
+                    table['num'] += 1
                     break
             if flag:
                 break
@@ -196,17 +199,46 @@ def drawBox(list_c):
     # Create a Rectangle patch
     for c in list_c:
         rect = patches.Rectangle(
-        (c[0]-20, c[1]-20), 40, 40, linewidth=1, edgecolor='r', facecolor='none')
+            (c[0]-20, c[1]-20), 40, 40, linewidth=1, edgecolor='r', facecolor='none')
         # Add the patch to the Axes
         ax.add_patch(rect)
     s = "./output/"+str(time.time())+".jpg"
     plt.savefig(s)
+    plt.close()
 
 
 def setBoxes(input):
     global boxes
     boxes = input
     run()
+
+
+def generateDataset():
+    tf = "./output/data.csv"
+    with open(tf, "w+") as f:
+        time = datetime.datetime.now()
+        for idx, data in enumerate(tables):
+            if data["num"] != -1:
+                for chair_id, chair in enumerate(data["chairs"]):
+                    id = "{}-{}".format(idx, chair_id)
+                    if id in chair_map and chair["occupied"] == False:
+                        print("------------Present and someone left!----------")
+                        x = chair_map[id]
+                        del chair_map[id]
+                        daysDiff = time - x["time"]
+                        occupied_for = daysDiff.seconds/60
+                        print(x)
+                        start_time = x["time"].hour*60+x["time"].minute
+                        f.write("{},{},{},{}".format(
+                            occupied_for, x["num"], x["table_id"], start_time))
+                    elif (id not in chair_map) and chair["occupied"] == True:
+                        print("--------------Just occupied!------------------------------")
+                        chair_map[id] = {"table_id": idx,
+                                         "time": time, "num": data["num"]}
+        f.close()
+    # printTables()
+    # with open(tf) as f:
+    #     f.write('{},{},{}\n'.format())
 
 
 def clearAll():
@@ -231,3 +263,4 @@ def run():
     cleanChairs()
     mapPeopleToChairs()
     printTables()
+    generateDataset()
