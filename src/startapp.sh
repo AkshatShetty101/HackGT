@@ -1,2 +1,2 @@
 export FLASK_APP=app.py
-flask run
+python3 -m flask run
