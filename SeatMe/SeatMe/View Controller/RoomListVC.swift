@@ -12,7 +12,8 @@ class RoomListVC: UIViewController {
 
     var roomList: UITableView!
     let roomCellID = "RoomListCell"
-    var characters = ["Atrium 1", "Atrium 2", "Atrium 3", "Atrium 4"]
+    var rooms = ["Atrium 1", "Atrium 2", "Atrium 3", "Atrium 4"]
+    var emptySeats = [10, 20, 5, 15]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,17 +37,49 @@ class RoomListVC: UIViewController {
 
 
 extension RoomListVC: UITableViewDelegate {
-    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 80
+    }
 }
 
 extension RoomListVC: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return characters.count
+        return rooms.count
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-      let cell = tableView.dequeueReusableCell(withIdentifier: roomCellID, for: indexPath)
-        cell.backgroundColor = .orange
-      cell.textLabel?.text = characters[indexPath.row]
-      return cell
+        let cell = tableView.dequeueReusableCell(withIdentifier: roomCellID, for: indexPath)
+        let roomNameLbl = UILabel()
+        roomNameLbl.text = rooms[indexPath.row]
+        roomNameLbl.font = UIFont(name: "HelveticaNeue-Bold", size: 18)
+        let emptySeatsLbl = UILabel()
+        let emptySeatsCount = emptySeats[indexPath.row]
+        emptySeatsLbl.text = "\(emptySeatsCount) Seats"
+        emptySeatsLbl.font = UIFont(name: "HelveticaNeue-Light", size: 16)
+        if (emptySeatsCount > 10) {
+            emptySeatsLbl.textColor = confirmGreen
+        } else {
+            emptySeatsLbl.textColor = disabledRed
+        }
+        let contentStackView = UIStackView(arrangedSubviews: [roomNameLbl,emptySeatsLbl])
+        cell.addSubview(contentStackView)
+        contentStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            contentStackView.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 10),
+            contentStackView.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -10),
+            contentStackView.topAnchor.constraint(equalTo: cell.topAnchor, constant: 10),
+            contentStackView.bottomAnchor.constraint(equalTo: cell.bottomAnchor, constant: 10)
+        ])
+        
+//        cell.textLabel?.text = characters[indexPath.row]
+        cell.selectionStyle = .blue
+        return cell
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        self.present(RoomSeatsVC(), animated: true)
     }
 }
+
+
+
