@@ -49,8 +49,8 @@ def printDDA(dda):
 def printTables():
     for key in tables:
         table = tables[key]
-        print("Key %2s | Confidence %2f | Time %s | Centroid %0.2d, %0.2d" %
-              (key, table['confidence'], str(table['time']), *table['centroid']), end="\n")
+        print("Key %2s | Confidence %2f | Centroid %0.2d, %0.2d" %
+              (key, table['confidence'], *table['centroid']), end="\n")
         for cid in table['chairs']:
             chair = table['chairs'][cid]
             if chair['occupied']:
@@ -68,8 +68,8 @@ def printOccupied():
         for cid in table['chairs']:
             chair = table['chairs'][cid]
             if chair['occupied']:
-                print("Key %2s | Confidence %2f | Centroid %0.2d, %0.2d" %
-                      (key, table['confidence'], *table['centroid']), end="\n")
+                print("Key %2s | Confidence %2f | Time %s | Centroid %0.2d, %0.2d" %
+                      (key, table['confidence'], str(table['time']), *table['centroid']), end="\n")
                 print("Key %2s | Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
                       (cid, chair['occupied'], chair['confidence'], *chair['centroid']), end="\n")
                 c_t.append(table['centroid'])
@@ -186,7 +186,7 @@ def getChairs():
                 old=tables[key]
                 for cid in old['chairs']:
                     old_chair=old['chairs'][cid]
-                    if abs(old_chair['centroid'][0]-c[0]) < 20 and abs(old_chair['centroid'][1]-c[1]) < 20:
+                    if abs(old_chair['centroid'][0]-c[0]) < 50 and abs(old_chair['centroid'][1]-c[1]) < 50:
                         flag=True
                         break
                 if flag:
@@ -266,6 +266,7 @@ def generateDataset():
                     # id = "{}-{}".format(idx, chair_id)
                     if id in chair_map and not chair["occupied"]:
                         print("------------Present and someone left!----------")
+                        print("Chair id %s"%(str(id)))
                         x = chair_map[id]
                         del chair_map[id]
                         daysDiff = time - x["time"]
@@ -276,6 +277,7 @@ def generateDataset():
                             occupied_for, x["num"], x["table_id"], start_time))
                     elif (id not in chair_map) and chair["occupied"]:
                         print("--------------Just occupied!------------------------------")
+                        print("Chair id %s"%(str(id)))
                         chair_map[id] = {"table_id": idx,
                                          "time": time, "num": data["num"]}
         f.close()
@@ -307,6 +309,6 @@ def run():
     mapChairToTable()
     cleanChairs()
     mapPeopleToChairs()
-    # printTables()
-    printOccupied()
+    printTables()
+    # printOccupied()
     generateDataset()
