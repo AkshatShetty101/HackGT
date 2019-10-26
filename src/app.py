@@ -24,6 +24,14 @@ def monitor_stream():
     while capture == True:
         # time.sleep(1)
         ret, frame = cap.read()
+        if ct == 0:
+            print("Creating Map", np.shape(frame))
+            ret, jpeg = cv2.imencode('.jpg', frame)
+            r = requests.post(url="http://34.83.136.245:5000",
+                              data=base64.b64encode(jpeg))
+            getTables(r.json())
+            ct+=1
+            continue
         if(ct % 20 == 0):
             # frame = resize_mjpeg(frame)
             print("Sending request", np.shape(frame))
@@ -31,7 +39,7 @@ def monitor_stream():
             r = requests.post(url="http://34.83.136.245:5000",
                               data=base64.b64encode(jpeg))
             setFrame(frame)
-            setBoxes(r.json())
+            run(r.json())
         ct += 1
         if ct > 2000000:
             ct = 0
