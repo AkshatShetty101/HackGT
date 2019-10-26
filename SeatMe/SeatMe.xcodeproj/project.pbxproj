@@ -12,6 +12,12 @@
 		B22C948F23642E5A004166D6 /* RoomListVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22C948E23642E5A004166D6 /* RoomListVC.swift */; };
 		B22C949423642E5F004166D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22C949323642E5F004166D6 /* Assets.xcassets */; };
 		B22C949723642E5F004166D6 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B22C949523642E5F004166D6 /* LaunchScreen.storyboard */; };
+		B22C94A2236472FA004166D6 /* RoomSeatsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22C94A1236472FA004166D6 /* RoomSeatsVC.swift */; };
+		B22C94A8236475E6004166D6 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22C94A7236475E6004166D6 /* Enums.swift */; };
+		B2EC00A723647ED400EA1CF8 /* RoomLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC00A623647ED400EA1CF8 /* RoomLayout.swift */; };
+		B2EC00A92364818D00EA1CF8 /* data.json in Resources */ = {isa = PBXBuildFile; fileRef = B2EC00A82364818D00EA1CF8 /* data.json */; };
+		B2EC00AC2364838B00EA1CF8 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC00AB2364838B00EA1CF8 /* Data.swift */; };
+		B2EC00B023649DE200EA1CF8 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC00AF23649DE200EA1CF8 /* Colors.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +28,12 @@
 		B22C949323642E5F004166D6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B22C949623642E5F004166D6 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B22C949823642E5F004166D6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B22C94A1236472FA004166D6 /* RoomSeatsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomSeatsVC.swift; sourceTree = "<group>"; };
+		B22C94A7236475E6004166D6 /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
+		B2EC00A623647ED400EA1CF8 /* RoomLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomLayout.swift; sourceTree = "<group>"; };
+		B2EC00A82364818D00EA1CF8 /* data.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = data.json; sourceTree = "<group>"; };
+		B2EC00AB2364838B00EA1CF8 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		B2EC00AF23649DE200EA1CF8 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +66,8 @@
 		B22C948923642E5A004166D6 /* SeatMe */ = {
 			isa = PBXGroup;
 			children = (
+				B2EC00AA2364837700EA1CF8 /* Utils */,
+				B22C94A6236475D9004166D6 /* Constants */,
 				B22C949E23642EF4004166D6 /* View Controller */,
 				B22C948A23642E5A004166D6 /* AppDelegate.swift */,
 				B22C948C23642E5A004166D6 /* SceneDelegate.swift */,
@@ -68,8 +82,28 @@
 			isa = PBXGroup;
 			children = (
 				B22C948E23642E5A004166D6 /* RoomListVC.swift */,
+				B22C94A1236472FA004166D6 /* RoomSeatsVC.swift */,
 			);
 			path = "View Controller";
+			sourceTree = "<group>";
+		};
+		B22C94A6236475D9004166D6 /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				B2EC00A82364818D00EA1CF8 /* data.json */,
+				B22C94A7236475E6004166D6 /* Enums.swift */,
+				B2EC00A623647ED400EA1CF8 /* RoomLayout.swift */,
+				B2EC00AF23649DE200EA1CF8 /* Colors.swift */,
+			);
+			path = Constants;
+			sourceTree = "<group>";
+		};
+		B2EC00AA2364837700EA1CF8 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				B2EC00AB2364838B00EA1CF8 /* Data.swift */,
+			);
+			path = Utils;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -131,6 +165,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B22C949723642E5F004166D6 /* LaunchScreen.storyboard in Resources */,
+				B2EC00A92364818D00EA1CF8 /* data.json in Resources */,
 				B22C949423642E5F004166D6 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -142,8 +177,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2EC00AC2364838B00EA1CF8 /* Data.swift in Sources */,
+				B2EC00B023649DE200EA1CF8 /* Colors.swift in Sources */,
 				B22C948F23642E5A004166D6 /* RoomListVC.swift in Sources */,
 				B22C948B23642E5A004166D6 /* AppDelegate.swift in Sources */,
+				B2EC00A723647ED400EA1CF8 /* RoomLayout.swift in Sources */,
+				B22C94A2236472FA004166D6 /* RoomSeatsVC.swift in Sources */,
+				B22C94A8236475E6004166D6 /* Enums.swift in Sources */,
 				B22C948D23642E5A004166D6 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
