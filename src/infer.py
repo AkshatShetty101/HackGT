@@ -12,6 +12,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import uuid
 
 classes = {
     0: '__background__', 1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle',
@@ -36,7 +37,7 @@ table_coords = []
 chair_coords = []
 people_coords = []
 
-tables = []
+tables = {}
 
 
 def printDDA(dda):
@@ -45,65 +46,88 @@ def printDDA(dda):
 
 
 def printTables():
-    temp = []
-    for table in tables:
-        for chair in table['chairs']:
+    for key in tables:
+        table = tables[key]
+        print("Key %2s | Confidence %2f | Time %s | Centroid %0.2d, %0.2d" %
+              (key, table['confidence'], str(table['time']), *table['centroid']), end="\n")
+        for cid in table['chairs']:
+            chair = table['chairs'][cid]
             if chair['occupied']:
-                print("Confidence %2f | Centroid %0.2d, %0.2d" %
-                      (table['confidence'], *table['centroid']), end="\n")
-                print("Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
-                      (chair['occupied'], chair['confidence'], *chair['centroid']), end="\n")
-                temp.append(chair['centroid'])
-                print("------------------------------------")
+                print("Key %2s | Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
+                      (cid, chair['occupied'], chair['confidence'], *chair['centroid']), end="\n")
+        print("------------------------------------")
+        print("\n")
+
+
+def printOccupied():
+    c_ch = []
+    c_t = []
+    for key in tables:
+        table = tables[key]
+        for cid in table['chairs']:
+            chair = table['chairs'][cid]
+            if chair['occupied']:
+                print("Key %2s | Confidence %2f | Centroid %0.2d, %0.2d" %
+                      (key, table['confidence'], *table['centroid']), end="\n")
+                print("Key %2s | Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
+                      (cid, chair['occupied'], chair['confidence'], *chair['centroid']), end="\n")
+                c_t.append(table['centroid'])
+                c_ch.append(chair['centroid'])
+                # print("------------------------------------")
                 print("\n")
-    if len(temp) > 0:
-        drawBox(temp)
+    if len(c_ch) > 0:
+        drawBox(c_ch)
+        # drawLine(c_ch, c_t)
 
 
 def cleanChairs():
-    for table in tables:
+    for key in tables:
+        table = tables[key]
         if len(table['chairs']) < 2:
             continue
-        table['chairs'].sort(key=lambda x: x['centroid'][0])
-        temp = []
-        for i in range(len(table['chairs'])-1):
-            if (abs(table['chairs'][i]['centroid'][0]-table['chairs'][i+1]['centroid'][0]) > 50) or (abs(table['chairs'][i]['centroid'][1]-table['chairs'][i+1]['centroid'][1]) > 50):
-                temp.append(table['chairs'][i])
-        temp.append(table['chairs'][len(table['chairs'])-1])
-        table['chairs'] = temp
-        # print(table['chairs'])
-
+        new_chairs = {}
+        chairs = []
+        for cid in table['chairs']:
+            temp = table['chairs'][cid]
+            temp['key'] = cid
+            chairs.append(temp)
+        chairs.sort(key=lambda x: x['centroid'][0])
+        for i in range(len(chairs)-1):
+            if (abs(chairs[i]['centroid'][0]-chairs[i+1]['centroid'][0]) > 50
+            or abs(chairs[i]['centroid'][1]-chairs[i+1]['centroid'][1]) > 50):
+                new_chairs[chairs[i]["key"]]=chairs[i]
+        table['chairs'] = new_chairs
 
 def mapChairToTable():
-    not_orphans = set()
-    for table in table_coords:
-        temp = {'centroid': centroid(
-            *table[0: 4]), 'chairs': [], 'confidence': table[4]}
-        min = 20000000000
+    not_orphans=set()
+    for coords in table_coords:
+        new_entry={'centroid': centroid(
+            *coords[0: 4]), 'chairs': {}, 'confidence': coords[4]}
+        min=200000
         for chair in chair_coords:
-            gap = dist(*temp['centroid'],
+            gap=dist(*new_entry['centroid'],
                        *centroid(chair[0], chair[1], chair[2], chair[3]))
             if(gap < min):
-                min = gap
+                min=gap
         # print(min, end="\n")
-        min = max(min, dist(table[0], table[1], *temp['centroid']))
+        min=max(min, dist(coords[0], coords[1], *new_entry['centroid']))
         for chair in chair_coords:
-            c = centroid(chair[0], chair[1], chair[2], chair[3])
-            gap = dist(*temp['centroid'], *c)
+            c=centroid(chair[0], chair[1], chair[2], chair[3])
+            gap=dist(*new_entry['centroid'], *c)
             if(gap < min):
                 not_orphans.add(str(c[0])+" "+str(c[1]))
-                temp['chairs'].append(
-                    {'centroid': c, 'confidence': chair[4], 'occupied': False})
-        tables.append(temp)
+                new_entry['chairs'][uuid.uuid1()]={'centroid': c, 'confidence': chair[4],
+                                                     'occupied': False}
+        tables[uuid.uuid1()]=new_entry
     if len(not_orphans)-len(chair_coords) == 0:
         return
-    orphan_table = {'centroid': [-1, -1], 'chairs': [], 'confidence': -1}
+    orphan_table={'centroid': [-1, -1], 'chairs': {}, 'confidence': -1}
     for chair in chair_coords:
-        c = centroid(chair[0], chair[1], chair[2], chair[3])
+        c=centroid(chair[0], chair[1], chair[2], chair[3])
         if not str(c[0])+" "+str(c[1]) in not_orphans:
-            orphan_table['chairs'].append(
-                {'centroid': c, 'confidence': chair[4], 'occupied': False})
-    tables.append(orphan_table)
+            orphan_table['chairs'][uuid.uuid1()]={'centroid': c, 'confidence': chair[4],
+                                                    'occupied': False}
+    tables[uuid.uuid1()]=orphan_table
 
 
 def mapPeopleToChairs():
@@ -111,16 +135,19 @@ def mapPeopleToChairs():
     for person in people_coords:
         if person[4] < 0.7:
             continue
-        c = centroid(person[0], person[1], person[2], person[3])
-        flag = False
-        for table in tables:
-            for chair in table['chairs']:
+        c=centroid(person[0], person[1], person[2], person[3])
+        flag=False
+        for id in tables:
+            table=tables[id]
+            for cid in table['chairs']:
+                chair=table['chairs'][cid]
                 # print(abs(c[0]-chair['centroid'][0]),
                 #       abs(c[1]-chair['centroid'][1]))
-                if abs(c[0]-chair['centroid'][0]) < 50 and \
-                        abs(c[1]-chair['centroid'][1]) < 50:
-                    chair['occupied'] = True
-                    flag = True
+                if abs(c[0]-chair['centroid'][0]) < 30 and \
+                        abs(c[1]-chair['centroid'][1]) < 30:
+                    chair['occupied']=True
+                    table['time']=time.strftime("%H")
+                    flag=True
                     break
             if flag:
                 break
@@ -128,18 +155,19 @@ def mapPeopleToChairs():
 
 def tableSizes():
     for table in table_coords:
-        print(table, end="\n")
-        print(dist(table[0], table[1], table[2], table[3]), end="\n\n")
+        print(table, end = "\n")
+        print(dist(table[0], table[1], table[2], table[3]), end = "\n\n")
 
 
 def getTables():
     for table in boxes[61]:
         if(table[4] > .7):
-            flag = False
-            c = centroid(table[0], table[1], table[2], table[3])
-            for old in tables:
+            flag=False
+            c=centroid(table[0], table[1], table[2], table[3])
+            for key in tables:
+                old=tables[key]
                 if abs(old['centroid'][0]-c[0]) < 20 and abs(old['centroid'][1]-c[1]) < 20:
-                    flag = True
+                    flag=True
                     break
             if flag:
                 continue
@@ -150,12 +178,14 @@ def getTables():
 def getChairs():
     for chair in boxes[57]:
         if(chair[4] > .7):
-            flag = False
-            c = centroid(chair[0], chair[1], chair[2], chair[3])
-            for old in tables:
-                for old_chair in old['chairs']:
+            flag=False
+            c=centroid(chair[0], chair[1], chair[2], chair[3])
+            for key in tables:
+                old=tables[key]
+                for cid in old['chairs']:
+                    old_chair=old['chairs'][cid]
                     if abs(old_chair['centroid'][0]-c[0]) < 20 and abs(old_chair['centroid'][1]-c[1]) < 20:
-                        flag = True
+                        flag=True
                         break
                 if flag:
                     break
@@ -185,41 +215,57 @@ def centroid(x1, y1, x2, y2):
 
 def setFrame(input):
     global frame
-    frame = input
+    frame=input
 
 
 def drawBox(list_c):
     # Create figure and axes
-    fig, ax = plt.subplots(1)
+    _, ax=plt.subplots(1)
     # Display the image
     ax.imshow(frame)
     # Create a Rectangle patch
     for c in list_c:
-        rect = patches.Rectangle(
-        (c[0]-20, c[1]-20), 40, 40, linewidth=1, edgecolor='r', facecolor='none')
+        rect=patches.Rectangle(
+            (c[0]-20, c[1]-20), 40, 40, linewidth = 1, edgecolor = 'r', facecolor = 'none')
         # Add the patch to the Axes
         ax.add_patch(rect)
-    s = "./output/"+str(time.time())+".jpg"
+    s="./output/"+str(time.time())+".jpg"
+    plt.savefig(s)
+    plt.close()
+
+
+def drawLine(list_c1, list_c2):
+    # Create figure and axes
+    _, ax=plt.subplots(1)
+    # Display the image
+    ax.imshow(frame)
+    # Create a Rectangle patch
+    for i in range(len(list_c1)):
+        ax.plot([list_c1[i][0], list_c2[i][0]], [list_c1[i][1],
+                                                 list_c2[i][1]], '--', linewidth = 1, color = 'firebrick')
+    s="./output/"+str(time.time())+".jpg"
     plt.savefig(s)
 
 
 def setBoxes(input):
     global boxes
-    boxes = input
+    boxes=input
     run()
 
 
 def clearAll():
-    tables = []
-    table_coords = []
-    chair_coords = []
-    people_coords = []
+    global tables, table_coords, chair_coords, people_coords
+    tables={}
+    table_coords=[]
+    chair_coords=[]
+    people_coords=[]
 
 
 def clearTemp():
-    table_coords = []
-    chair_coords = []
-    people_coords = []
+    global table_coords, chair_coords, people_coords
+    table_coords=[]
+    chair_coords=[]
+    people_coords=[]
 
 
 def run():
@@ -230,4 +276,5 @@ def run():
     mapChairToTable()
     cleanChairs()
     mapPeopleToChairs()
-    printTables()
+    # printTables()
+    printOccupied()
