@@ -20,3 +20,16 @@ func readLayout() -> RoomLayout? {
     }
     return nil
 }
+
+func readLayout2() -> RoomLayout2? {
+    guard let filePath = Bundle.main.path(forResource: "data_2", ofType: "json") else { return nil }
+    let fileUrl = URL(fileURLWithPath: filePath)
+    do {
+        let layout = try JSONDecoder().decode(RoomLayout2.self, from: Data(contentsOf: fileUrl))
+        return layout
+    } catch let jsonErr {
+        print("Error reading the layout file.")
+        print(jsonErr.localizedDescription)
+    }
+    return nil
+}

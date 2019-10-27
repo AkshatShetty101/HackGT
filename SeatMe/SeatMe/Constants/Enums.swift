@@ -9,10 +9,6 @@
 import Foundation
 import UIKit
 
-enum SegueIdentifiers: String {
-    case ShowRoomSeats = "ShowRoomSeats"
-}
-
 enum MapItems {
     case Chair
     case Table

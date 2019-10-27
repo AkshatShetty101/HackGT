@@ -71,7 +71,6 @@ extension RoomListVC: UITableViewDataSource {
             contentStackView.bottomAnchor.constraint(equalTo: cell.bottomAnchor, constant: 10)
         ])
         
-//        cell.textLabel?.text = characters[indexPath.row]
         cell.selectionStyle = .blue
         return cell
     }
