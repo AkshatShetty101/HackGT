@@ -299,29 +299,30 @@ def drawLine(list_c1, list_c2):
 
 def generateDataset():
     tf = "./output/data.csv"
-    with open(tf, "w+") as f:
-        time = datetime.datetime.now()
-        for idx, data in tables.items():
-            # if data["num"] != -1:
-            for id, chair in data["chairs"].items():
-                if id in chair_map and not chair["occupied"]:
-                    print("------------Present and someone left!----------")
-                    print("Chair id %s" % (str(id)))
-                    x = chair_map[id]
-                    del chair_map[id]
-                    daysDiff = time - x["time"]
-                    occupied_for = daysDiff.seconds/60
-                    print(x)
-                    start_time = x["time"].hour*60+x["time"].minute
-                    f.write("{},{},{},{}".format(
-                        occupied_for, x["num"], x["table_id"], start_time))
-                elif (id not in chair_map) and chair["occupied"] and len(previousStates[id]) >= state_threshold:
-                    print(
-                        "--------------Just occupied!------------------------------")
-                    print("Chair id %s" % (str(id)))
-                    chair_map[id] = {"table_id": idx,
-                                     "time": time, "num": data["num"]}
-        f.close()
+    f = open(tf, "a")
+    print("Chair_map", chair_map)
+    time = datetime.datetime.now()
+    for idx, data in tables.items():
+        for id, chair in data["chairs"].items():
+            if id in chair_map and not chair["occupied"]:
+                print("------------Present and someone left!----------")
+                print("Chair id %s" % (str(id)))
+                x = chair_map[id]
+                del chair_map[id]
+                daysDiff = time - x["time"]
+                occupied_for = int(daysDiff.seconds//60)
+                start_time = x["time"].hour*60+x["time"].minute
+                y = str(occupied_for)+"," + \
+                    str(x["num"])+","+str(x["table_id"])+","+str(start_time)
+                print(y)
+                f.write(y)
+            elif (id not in chair_map) and chair["occupied"] and len(previousStates[id]) >= 4:
+                print(
+                    "--------------Just occupied!------------------------------")
+                print("Chair id %s" % (str(id)))
+                chair_map[id] = {"table_id": idx,
+                                 "time": time, "num": data["num"]}
+    f.close()
     # printTables()
     # with open(tf) as f:
     #     f.write('{},{},{}\n'.format())
@@ -451,4 +452,9 @@ def run(boxes):
     storeState()
     printTables()
     # printOccupied()
-    # generateDataset()
+    generateDataset()
+
+
+def getDeets(tid):
+    print(tables[int(tid)])
+    return tables[int(tid)]

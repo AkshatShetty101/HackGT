@@ -11,6 +11,8 @@ capture = False
 url = "rtsp://143.215.56.113:8080/video/h264"
 # url = "rtsp://143.215.92.236:8080/video/h264"
 # url = "rtsp://143.215.116.154:8080/video/h264"
+
+
 @app.route('/')
 def hello_world():
     return('Hello, World!')
@@ -75,6 +77,41 @@ def getLayout():
 def stop_monitor_stream():
     capture = False
 
+
+@app.route('/predictedTime')
+def predictTime():
+    tid = request.args.get("tid")
+    table = getDeets(tid)
+    if not 'time' in table:
+        return ""
+    data = {
+        "Inputs": {
+            "input1":
+            [
+                {
+                    'occupied_for': "1",
+                    'num': table['num'],
+                    'table_id': tid,
+                    'time': table['time'],
+                }
+            ],
+        },
+        "GlobalParameters":  {
+        }
+    }
+    body = str.encode(json.dumps(data))
+    url = 'https://ussouthcentral.services.azureml.net/workspaces/3de4ce95d35d47828e6e865801b96010/services/d68a728a17264d5685156fea3ae55e64/execute?api-version=2.0&format=swagger'
+    api_key = 'abcx=='  # Replace this with the API key for the web service
+    headers = {'Content-Type': 'application/json',
+               'Authorization': ('Bearer ' + api_key)}
+    r = requests.post(url=url,
+                      data=body, headers=headers)
+    print(r.status_code)
+    print('shiz')
+    if r.status_code == 200:
+        print(r.json())
+        return r.json()
+    return ""
 
 def resize_mjpeg(frame):
     r = 320.0 / frame.shape[1]
