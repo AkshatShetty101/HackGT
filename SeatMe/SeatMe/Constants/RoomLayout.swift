@@ -29,8 +29,8 @@ struct RoomLayout: Decodable {
 }
 
 struct Chairs2: Decodable {
-    let front: [Bool]
-    let back: [Bool]
+    let front: [Bool]?
+    let back: [Bool]?
 }
 
 struct Table2: Decodable {
@@ -39,4 +39,5 @@ struct Table2: Decodable {
 }
 struct RoomLayout2: Decodable {
     let tables: [[Table2]]
+    let orphans: [Bool]?
 }

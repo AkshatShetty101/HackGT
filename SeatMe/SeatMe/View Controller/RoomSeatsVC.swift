@@ -17,7 +17,12 @@ class RoomSeatsVC: UIViewController {
     let GUTTER_HEIGHT = 10
     var roomDetailsTableView: UITableView?
     let roomCellID = "RoomListCell"
-
+    var layout: RoomLayout2? = nil
+    var seatsView: UIScrollView?
+    var timer = Timer()
+    var maxX: CGFloat = 0
+    var maxY: CGFloat = 0
+    
     let roomFacilities = ["Printer", "Fire Exit", "Projector"]
     let roomFacilitiesIcon:[UIImage?] = [UIImage(named: "printer"), UIImage(named: "fire-exit"), UIImage(named: "projector")]
     
@@ -25,7 +30,13 @@ class RoomSeatsVC: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .white
         view.addSubview(makeLayoutHeaderView())
-        view.addSubview(makeSeatsView())
+        seatsView = UIScrollView(frame: CGRect(x: 0, y: 50, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height/2))
+        view.addSubview(seatsView!)
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { (timer) in
+            self.makeSeatsView()
+        })
+//        makeSeatsView()
+        
         view.addSubview(makeFacilitiesHeaderView())
         view.addSubview(makeTableView())
     }
@@ -48,28 +59,48 @@ class RoomSeatsVC: UIViewController {
         return title
     }
     
-    func makeSeatsView() -> UIScrollView {
-        let seatsView = UIScrollView(frame: CGRect(x: 0, y: 50, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height/2))
-        let layout = readLayout2()
-        var rowNumber = 0
-        var maxRowLength = 0
-        for row in (layout?.tables)! {
-            var offset = 0
-            maxRowLength = row.count > maxRowLength ? row.count : maxRowLength
+    func makeSeatsView() {
+        seatsView!.subviews.forEach({ $0.removeFromSuperview() }) // this gets things done
 
-            for table in row {
-                
-                for imageView in makeImageView2(rowNumber: rowNumber, offset: table.offset , chairs: table.chairs) {
-                    seatsView.addSubview(imageView)
+        let _ = fetchLayout { (layout) in
+            print(layout)
+            var rowNumber = 0
+            var maxRowLength = 0
+            for row in (layout.tables) {
+                let sortedRow = row.sorted(by: {$0.offset < $1.offset})
+                var offset = 0
+                if sortedRow.count > 0 {
+                    offset = sortedRow[0].offset
+                    print(offset)
                 }
-                offset += 1
+                maxRowLength = sortedRow.count > maxRowLength ? sortedRow.count : maxRowLength
+//                print(row)
+                for table in sortedRow {
+//                    print(table)
+                    self.makeImageView2(rowNumber: rowNumber, offset: table.offset < offset ? offset : table.offset, chairs: table.chairs) { (imageViews) in
+                        
+                        for imageView in imageViews {
+                            DispatchQueue.main.async {
+                                self.seatsView?.addSubview(imageView)
+                            }
+                        }
+                    }
+                    
+                    offset += 1
+                }
+                rowNumber += 1
             }
-            rowNumber += 1
+            let size = CGSize(width:2*maxRowLength*self.TABLE_ICON_WIDTH, height: rowNumber*(self.TABLE_ICON_HEIGHT + 2*self.CHAIR_ICON_HEIGHT)+self.CHAIR_ICON_HEIGHT+self.GUTTER_HEIGHT)
+            DispatchQueue.main.async {
+                self.seatsView?.contentSize = size
+                self.maxX = size.width
+                self.maxY = size.height
+                if let orphans = layout.orphans {
+                    self.addOrphans(orphans: orphans)
+                }
+          
+            }
         }
-        let size = CGSize(width:2*maxRowLength*TABLE_ICON_WIDTH, height: rowNumber*(TABLE_ICON_HEIGHT + 2*CHAIR_ICON_HEIGHT)+CHAIR_ICON_HEIGHT+GUTTER_HEIGHT)
-        print(size)
-        seatsView.contentSize = size
-        return seatsView
     }
     
     func readFromCoordinatedLayout(seatsView: UIScrollView) {
@@ -80,7 +111,7 @@ class RoomSeatsVC: UIViewController {
             if let roomLayout = roomLayout {
                 for table in roomLayout.tables {
                     for chair in table.chairs {
-                        var chairCoordinate = chair.coordinate
+                        let chairCoordinate = chair.coordinate
                         if chairCoordinate.x > maxX {
                             maxX = chairCoordinate.x
                         }
@@ -148,86 +179,84 @@ class RoomSeatsVC: UIViewController {
         return iconView
     }
     
-    func makeImageView2(rowNumber: Int, offset: Int, chairs: Chairs2 ) -> [UIImageView] {
-      
+    func makeImageView2(rowNumber: Int, offset: Int, chairs: Chairs2, completion: @escaping ([UIImageView]) -> () ) -> [UIImageView] {
+        print(chairs)
         
         var imageViews: [UIImageView] = []
         let tableIcon = UIImage(named: AssetFileNames.Table.rawValue)
-        let tableIconView = UIImageView(frame: CGRect(x: offset*2*TABLE_ICON_WIDTH, y: rowNumber*(TABLE_ICON_HEIGHT+2*CHAIR_ICON_HEIGHT)+CHAIR_ICON_HEIGHT, width: 2*TABLE_ICON_WIDTH, height: TABLE_ICON_HEIGHT))
-        tableIconView.image = tableIcon
-        imageViews.append(tableIconView)
-        
-        var yOffset = rowNumber*(TABLE_ICON_HEIGHT+2*CHAIR_ICON_HEIGHT)+GUTTER_HEIGHT
-        
-        var colCount = 0
-        for chair in chairs.front {
-            if colCount == 2 {
-                break;
-            }
-            let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-            let chairIconView = UIImageView(frame: CGRect(x: offset*100+20*(colCount+1)+10*colCount, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
-            chairIconView.image = chairIcon
-            chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-            chairIconView.tintColor = !chair ? confirmGreen : disabledRed
-            imageViews.append(chairIconView)
+        DispatchQueue.main.async {
+            let tableIconView = UIImageView(frame: CGRect(x: offset*2*self.TABLE_ICON_WIDTH, y: rowNumber*(self.TABLE_ICON_HEIGHT+2*self.CHAIR_ICON_HEIGHT)+self.CHAIR_ICON_HEIGHT, width: 2*self.TABLE_ICON_WIDTH, height: self.TABLE_ICON_HEIGHT))
+            tableIconView.image = tableIcon
+            imageViews.append(tableIconView)
             
-            colCount += 1
-//            if chairs[1] != -1 {
-//                let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-//                let chairIconView = UIImageView(frame: CGRect(x: offset*100+50, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
-//                chairIconView.image = chairIcon
-//                chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-//                chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
-//                imageViews.append(chairIconView)
-//            }
-        }
-        
+            
+            var yOffset = rowNumber*(self.TABLE_ICON_HEIGHT+2*self.CHAIR_ICON_HEIGHT)+self.GUTTER_HEIGHT
+              
+              var colCount = 0
+              if let frontChairs = chairs.front {
+                  for chair in frontChairs {
+                      if colCount == 2 {
+                          break;
+                      }
+                   
+                      let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
+                      let chairIconView = UIImageView(frame: CGRect(x: offset*100+20*(colCount+1)+10*colCount, y: yOffset, width: self.CHAIR_ICON_WIDTH, height: self.CHAIR_ICON_HEIGHT))
+                      chairIconView.image = chairIcon
+                      chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
+                      chairIconView.tintColor = !chair ? confirmGreen : disabledRed
+                      imageViews.append(chairIconView)
+                      
+                      colCount += 1
+                  }
+              }
+              
+            yOffset = (rowNumber+1)*(self.TABLE_ICON_HEIGHT+self.CHAIR_ICON_HEIGHT) + rowNumber*self.CHAIR_ICON_HEIGHT - self.GUTTER_HEIGHT
+              
+              colCount = 0
+              if let backChairs = chairs.back {
+                  for chair in backChairs {
+                     if colCount == 2 {
+                         break;
+                     }
 
-        yOffset = (rowNumber+1)*(TABLE_ICON_HEIGHT+CHAIR_ICON_HEIGHT) + rowNumber*CHAIR_ICON_HEIGHT - GUTTER_HEIGHT
-        
-        colCount = 0
-        for chair in chairs.back {
-            if colCount == 2 {
-                break;
-            }
+                     let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
+                    let chairIconView = UIImageView(frame: CGRect(x: offset*100+20*(colCount+1)+10*colCount, y: yOffset, width: self.CHAIR_ICON_WIDTH, height: self.CHAIR_ICON_HEIGHT))
+                     chairIconView.image = chairIcon
+                     chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
+                     chairIconView.tintColor = !chair ? confirmGreen : disabledRed
+                     imageViews.append(chairIconView)
+                         
+                     colCount += 1
 
-            let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-            let chairIconView = UIImageView(frame: CGRect(x: offset*100+20*(colCount+1)+10*colCount, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
-            chairIconView.image = chairIcon
-            chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-            chairIconView.tintColor = !chair ? confirmGreen : disabledRed
-            imageViews.append(chairIconView)
-                
-            colCount += 1
-//            if chairs[1] != -1 {
-//                let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-//                let chairIconView = UIImageView(frame: CGRect(x: offset*100+50, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
-//                chairIconView.image = chairIcon
-//                chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-//                chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
-//                imageViews.append(chairIconView)
-//            }
+                 }
+              }
+            
+            completion(imageViews)
         }
-        
-//        if chairs[2] != -1 {
-//            let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-//            let chairIconView = UIImageView(frame: CGRect(x: offset*100+20, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
-//            chairIconView.image = chairIcon
-//            chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-//            chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
-//            imageViews.append(chairIconView)
-//        }
-//
-//        if chairs[3] != -1 {
-//            let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-//            let chairIconView = UIImageView(frame: CGRect(x: offset*100+50, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
-//            chairIconView.image = chairIcon
-//            chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-//            chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
-//            imageViews.append(chairIconView)
-//        }
-               
         return imageViews
+    }
+    
+    func addOrphans(orphans:[Bool]) {
+        var x: CGFloat = 0
+        var y: CGFloat = self.maxY
+        for orphan in orphans {
+            if x > maxX {
+                x = 0
+                y += CGFloat(self.CHAIR_ICON_HEIGHT)
+            }
+            
+            DispatchQueue.main.async {
+                let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
+                let chairIconView = UIImageView(frame: CGRect(x: x, y: y, width: CGFloat(self.CHAIR_ICON_WIDTH), height: CGFloat(self.CHAIR_ICON_HEIGHT)))
+                chairIconView.image = chairIcon
+                chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
+                chairIconView.tintColor = !orphan ? confirmGreen : disabledRed
+                self.seatsView?.addSubview(chairIconView)
+                x += CGFloat(self.CHAIR_ICON_WIDTH)
+            }
+            
+       
+        }
     }
 }
 
@@ -265,5 +294,22 @@ extension RoomSeatsVC: UITableViewDataSource {
             contentStackView.bottomAnchor.constraint(equalTo: cell.bottomAnchor, constant: 10)
         ])
         return cell
+    }
+    
+    func fetchLayout(completion: @escaping (RoomLayout2) -> ()) {
+        let url = URL(string: "http://127.0.0.1:5000/layout?id=1")!
+
+        let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
+            guard let data = data else { return }
+            do {
+                let data = try JSONDecoder().decode(RoomLayout2.self, from: data)
+                completion(data)
+               } catch let jsonErr {
+                   print("Error reading the data file.")
+                   print(jsonErr.localizedDescription)
+               }
+        }
+
+        task.resume()
     }
 }
