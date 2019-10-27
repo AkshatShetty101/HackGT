@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import uuid
 import datetime
+import json
 
 classes = {
     0: '__background__', 1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle',
@@ -32,6 +33,7 @@ classes = {
     71: 'toaster', 72: 'sink', 73: 'refrigerator', 74: 'book', 75: 'clock', 76: 'vase',
     77: 'scissors', 78: 'teddy bear', 79: 'hair drier', 80: 'toothbrush'}
 
+state_threshold = 4
 table_counter = 0
 chair_counter = 'A'
 
@@ -65,6 +67,7 @@ def printTables():
         print("------------------------------------")
         print("\n")
 
+
 def storeState():
     for key in tables:
         table = tables[key]
@@ -77,7 +80,7 @@ def storeState():
                 previousStates[cid] = [chair['occupied']]
             else:
                 previousStates[cid].append(chair['occupied'])
-                if len(previousStates[cid]) > 4:
+                if len(previousStates[cid]) > state_threshold:
                     previousStates[cid] = previousStates[cid][1:]
 
 
@@ -94,7 +97,7 @@ def printOccupied():
                 # for val in previousStates[cid]:
                 #     if val:
                 #         count += 1
-                if len(previousStates[cid]) >= 4:
+                if len(previousStates[cid]) >= state_threshold:
                     # print("Key %2s | Confidence %2f | Time %s | Centroid %0.2d, %0.2d" %
                     #       (key, table['confidence'], str(table['time']), *table['centroid']), end="\n")
                     # print("Key %2s | Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
@@ -213,7 +216,7 @@ def getTables(boxes):
 
 
 def getChairs(boxes):
-    list_c  =[]
+    list_c = []
     for chair in boxes[57]:
         if(chair[4] > .6):
             # flag = False
@@ -312,7 +315,7 @@ def generateDataset():
                     start_time = x["time"].hour*60+x["time"].minute
                     f.write("{},{},{},{}".format(
                         occupied_for, x["num"], x["table_id"], start_time))
-                elif (id not in chair_map) and chair["occupied"] and len(previousStates[id])>=4:
+                elif (id not in chair_map) and chair["occupied"] and len(previousStates[id]) >= state_threshold:
                     print(
                         "--------------Just occupied!------------------------------")
                     print("Chair id %s" % (str(id)))
@@ -355,55 +358,87 @@ def getAppData(use_case):
         'tables': [],
         'orphans': []
     }
-    width, height, _ = np.shape(frame)
-    if use_case == "1":
-        result['tables'] = [[], []]
-        result['orphans'] = []
-        sorted_tables = []
-        for tid in tables:
-            if(tid == 'orphan'):
-                # print(tables[tid]['chairs'])
-                for cid in tables[tid]['chairs']:
-                    result['orphans'].append(
-                        tables[tid]['chairs'][cid]['occupied'])
-            else:
-                sorted_tables.append(tables[tid])
-        sorted_tables.sort(key=lambda x: -x['centroid'][1])
-        for i, t in enumerate(sorted_tables):
-            offset = int(t['centroid'][0]/(width/3))
-            # print(offset, t['centroid'])
-            sorted_chairs = []
-            for cid in t['chairs']:
-                sorted_chairs.append(t['chairs'][cid])
-            sorted_chairs.sort(key=lambda x: -x['centroid'][1])
-            back = []
-            front = []
-            for i, chairs in enumerate(sorted_chairs):
-                if chairs['centroid'][1] > t['centroid'][1]:
-                    back.append(chairs)
-                else:
-                    front.append(chairs)
-            back.sort(key=lambda x: x['centroid'][0])
-            front.sort(key=lambda x: x['centroid'][0])
-            if i == 0:
-                result['tables'][0].append({
-                    'offset': offset,
-                    'chairs': {
-                        'back': [a['occupied'] for a in back],
-                        'front': [a['occupied'] for a in front]
-                    }
-                })
-            else:
-                result['tables'][1].append({
-                    'offset': offset,
-                    'chairs': {
-                        'back': [a['occupied'] for a in back],
-                        'front': [a['occupied'] for a in front]
-                    }
-                })
-        print(result)
-        return result
-    return ""
+    height, width, _ = np.shape(frame)
+    result = {
+        'size': {
+            'w': width,
+            'h': height
+        },
+        'tables': []
+    }
+    for tid in tables:
+        if tid == "orphan":
+            continue
+        table = tables[tid]
+        entry = {
+            'tid': tid,
+            'centroid': {
+                'x': int(table['centroid'][0]),
+                'y': int(table['centroid'][1])
+            },
+            'chairs': []
+        }
+        for cid in table['chairs']:
+            chair = table['chairs'][cid]
+            c_entry = {
+                'cid': cid,
+                'occupied': len(previousStates[cid]) >= state_threshold,
+                'centroid': {
+                    'x': int(chair['centroid'][0]),
+                    'y': int(chair['centroid'][1])
+                }
+            }
+            entry['chairs'].append(c_entry)
+        result['tables'].append(entry)
+    print(result)
+    # if use_case == "1":
+    #     result['tables'] = [[], []]
+    #     result['orphans'] = []
+    #     sorted_tables = []
+    #     for tid in tables:
+    #         if(tid == 'orphan'):
+    #             # print(tables[tid]['chairs'])
+    #             for cid in tables[tid]['chairs']:
+    #                 result['orphans'].append(
+    #                     tables[tid]['chairs'][cid]['occupied'])
+    #         else:
+    #             sorted_tables.append(tables[tid])
+    #     sorted_tables.sort(key=lambda x: -x['centroid'][1])
+    #     for i, t in enumerate(sorted_tables):
+    #         offset = int(t['centroid'][0]/(width/3))
+    #         # print(offset, t['centroid'])
+    #         sorted_chairs = []
+    #         for cid in t['chairs']:
+    #             sorted_chairs.append(t['chairs'][cid])
+    #         sorted_chairs.sort(key=lambda x: -x['centroid'][1])
+    #         back = []
+    #         front = []
+    #         for i, chairs in enumerate(sorted_chairs):
+    #             if chairs['centroid'][1] > t['centroid'][1]:
+    #                 back.append(chairs)
+    #             else:
+    #                 front.append(chairs)
+    #         back.sort(key=lambda x: x['centroid'][0])
+    #         front.sort(key=lambda x: x['centroid'][0])
+    #         if i == 0:
+    #             result['tables'][0].append({
+    #                 'offset': offset,
+    #                 'chairs': {
+    #                     'back': [a['occupied'] for a in back],
+    #                     'front': [a['occupied'] for a in front]
+    #                 }
+    #             })
+    #         else:
+    #             result['tables'][1].append({
+    #                 'offset': offset,
+    #                 'chairs': {
+    #                     'back': [a['occupied'] for a in back],
+    #                     'front': [a['occupied'] for a in front]
+    #                 }
+    #             })
+    #     print(result)
+    #     return result
+    return json.dumps(result)
 
 
 def run(boxes):
