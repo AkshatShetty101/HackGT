@@ -10,8 +10,8 @@ import Foundation
 import UIKit
 
 class RoomSeatsVC: UIViewController {
-    let CHAIR_ICON_WIDTH = 30
-    let CHAIR_ICON_HEIGHT = 30
+    let CHAIR_ICON_WIDTH = 20
+    let CHAIR_ICON_HEIGHT = 20
     let TABLE_ICON_WIDTH = 50
     let TABLE_ICON_HEIGHT = 50
     let GUTTER_HEIGHT = 10
@@ -30,9 +30,9 @@ class RoomSeatsVC: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .white
         view.addSubview(makeLayoutHeaderView())
-        seatsView = UIScrollView(frame: CGRect(x: 0, y: 50, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height/2))
+        seatsView = UIScrollView(frame: CGRect(x: 10, y: 50, width: UIScreen.main.bounds.width - 10, height: UIScreen.main.bounds.height/2))
         view.addSubview(seatsView!)
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { (timer) in
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { (timer) in
             self.makeSeatsView()
         })
 //        makeSeatsView()
@@ -66,12 +66,11 @@ class RoomSeatsVC: UIViewController {
             print(layout)
             var rowNumber = 0
             var maxRowLength = 0
+            var offset = 0
             for row in (layout.tables) {
                 let sortedRow = row.sorted(by: {$0.offset < $1.offset})
-                var offset = 0
                 if sortedRow.count > 0 {
                     offset = sortedRow[0].offset
-                    print(offset)
                 }
                 maxRowLength = sortedRow.count > maxRowLength ? sortedRow.count : maxRowLength
 //                print(row)
@@ -90,15 +89,17 @@ class RoomSeatsVC: UIViewController {
                 }
                 rowNumber += 1
             }
-            let size = CGSize(width:2*maxRowLength*self.TABLE_ICON_WIDTH, height: rowNumber*(self.TABLE_ICON_HEIGHT + 2*self.CHAIR_ICON_HEIGHT)+self.CHAIR_ICON_HEIGHT+self.GUTTER_HEIGHT)
+           
             DispatchQueue.main.async {
-                self.seatsView?.contentSize = size
+                let size = CGSize(width:2*maxRowLength*self.TABLE_ICON_WIDTH, height: rowNumber*(self.TABLE_ICON_HEIGHT + 2*self.CHAIR_ICON_HEIGHT)+self.CHAIR_ICON_HEIGHT+self.GUTTER_HEIGHT)
+                print(2*maxRowLength*self.TABLE_ICON_WIDTH)
+                self.seatsView?.contentSize = CGSize(width: 2*offset*self.TABLE_ICON_WIDTH, height: rowNumber*(self.TABLE_ICON_HEIGHT + 2*self.CHAIR_ICON_HEIGHT)+self.CHAIR_ICON_HEIGHT+self.GUTTER_HEIGHT)
+                self.seatsView?.layer.borderWidth = 1
                 self.maxX = size.width
                 self.maxY = size.height
                 if let orphans = layout.orphans {
                     self.addOrphans(orphans: orphans)
                 }
-          
             }
         }
     }
@@ -185,12 +186,16 @@ class RoomSeatsVC: UIViewController {
         var imageViews: [UIImageView] = []
         let tableIcon = UIImage(named: AssetFileNames.Table.rawValue)
         DispatchQueue.main.async {
-            let tableIconView = UIImageView(frame: CGRect(x: offset*2*self.TABLE_ICON_WIDTH, y: rowNumber*(self.TABLE_ICON_HEIGHT+2*self.CHAIR_ICON_HEIGHT)+self.CHAIR_ICON_HEIGHT, width: 2*self.TABLE_ICON_WIDTH, height: self.TABLE_ICON_HEIGHT))
+            let tableIconView = UIImageView(frame: CGRect(x: offset*2*self.TABLE_ICON_WIDTH + self.GUTTER_HEIGHT, y: rowNumber*(self.TABLE_ICON_HEIGHT+2*self.CHAIR_ICON_HEIGHT)+self.CHAIR_ICON_HEIGHT, width: 2*self.TABLE_ICON_WIDTH - self.GUTTER_HEIGHT, height: self.TABLE_ICON_HEIGHT))
+            NSLayoutConstraint.activate([
+                tableIconView.widthAnchor.constraint(equalToConstant: CGFloat(self.TABLE_ICON_WIDTH*2)),
+                tableIconView.heightAnchor.constraint(equalToConstant: CGFloat(self.TABLE_ICON_HEIGHT))
+            ])
             tableIconView.image = tableIcon
             imageViews.append(tableIconView)
             
             
-            var yOffset = rowNumber*(self.TABLE_ICON_HEIGHT+2*self.CHAIR_ICON_HEIGHT)+self.GUTTER_HEIGHT
+            var yOffset = rowNumber*(self.TABLE_ICON_HEIGHT+2*self.CHAIR_ICON_HEIGHT)-self.GUTTER_HEIGHT
               
               var colCount = 0
               if let frontChairs = chairs.front {
@@ -252,9 +257,10 @@ class RoomSeatsVC: UIViewController {
                 chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
                 chairIconView.tintColor = !orphan ? confirmGreen : disabledRed
                 self.seatsView?.addSubview(chairIconView)
-                x += CGFloat(self.CHAIR_ICON_WIDTH)
+                x += CGFloat(self.CHAIR_ICON_WIDTH + self.GUTTER_HEIGHT)
             }
             
+            maxY = y
        
         }
     }

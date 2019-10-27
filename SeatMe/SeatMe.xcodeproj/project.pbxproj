@@ -19,6 +19,7 @@
 		B2EC00AC2364838B00EA1CF8 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC00AB2364838B00EA1CF8 /* Data.swift */; };
 		B2EC00B023649DE200EA1CF8 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EC00AF23649DE200EA1CF8 /* Colors.swift */; };
 		B2EC00B32364BFAD00EA1CF8 /* data.json in Resources */ = {isa = PBXBuildFile; fileRef = B2EC00B22364BFAD00EA1CF8 /* data.json */; };
+		B2EC00D5236584C700EA1CF8 /* data.json in Resources */ = {isa = PBXBuildFile; fileRef = B2EC00D4236584C700EA1CF8 /* data.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		B2EC00AB2364838B00EA1CF8 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		B2EC00AF23649DE200EA1CF8 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		B2EC00B22364BFAD00EA1CF8 /* data.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = data.json; path = "../../../../../../Documents/GaTech/On Campus Jobs/GRA SWE Mobile/Reporter/Reporter/Constants/data.json"; sourceTree = "<group>"; };
+		B2EC00D4236584C700EA1CF8 /* data.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = data.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +96,7 @@
 			children = (
 				B2EC00A82364818D00EA1CF8 /* data_2.json */,
 				B2EC00B22364BFAD00EA1CF8 /* data.json */,
+				B2EC00D4236584C700EA1CF8 /* data.json */,
 				B22C94A7236475E6004166D6 /* Enums.swift */,
 				B2EC00A623647ED400EA1CF8 /* RoomLayout.swift */,
 				B2EC00AF23649DE200EA1CF8 /* Colors.swift */,
@@ -171,6 +174,7 @@
 				B22C949723642E5F004166D6 /* LaunchScreen.storyboard in Resources */,
 				B2EC00A92364818D00EA1CF8 /* data_2.json in Resources */,
 				B22C949423642E5F004166D6 /* Assets.xcassets in Resources */,
+				B2EC00D5236584C700EA1CF8 /* data.json in Resources */,
 				B2EC00B32364BFAD00EA1CF8 /* data.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
