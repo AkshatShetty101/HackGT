@@ -2,61 +2,103 @@
     "tables": [
         [
             {
-                "offset": 1,
-                "chairs": [0,0,1,0]
+                "offset": true,
+                "chairs": {
+                    "front": [false,false],
+                    "back": [true,false]
+                }
             }
         ],
         [
             {
-                "offset": 0,
-                "chairs": [-1,-1,1,-1]
+                "offset": false,
+                "chairs": {
+                    "front": [-true,-true],
+                    "back": [true,-true]
+                    
+                }
             },
             {
-                "offset": 1,
-                "chairs": [-1,1,1,-1]
+                "offset": true,
+                "chairs": {
+                    "front": [-true,true],
+                    "back": [true,-true]
+                }
             },
             {
                 "offset": 2,
-                "chairs": [1,1,1,-1]
+                "chairs": {
+                    "front": [true,true],
+                    "back": [true,-true]
+                    
+                }
             },
             {
                "offset": 3,
-               "chairs": [1,1,1,-1]
+               "chairs": {
+                   "front": [true,true],
+                   "back": [true,-true]
+                   
+               }
             },
             {
                "offset": 4,
-               "chairs": [1,1,1,-1]
+               "chairs": {
+                   "front": [true,true],
+                   "back": [true,-true]
+               
+               }
             },
         ],
         [
-            {
-                "offset": 0,
-                "chairs": [-1,-1,1,-1]
-            },
-            {
-                "offset": 1,
-                "chairs": [-1,0,1,-1]
-            },
-            {
-                "offset": 2,
-                "chairs": [1,1,1,-1]
-            },
-            {
-               "offset": 3,
-               "chairs": [-1,1,1,-1]
-            },
+        {
+           "offset": false,
+           "chairs": {
+               "front": [-true,-true],
+               "back": [true,-true]
+               
+           }
+        },
+        {
+           "offset": true,
+           "chairs": {
+               "front": [-true,true],
+               "back": [true,-true]
+           }
+        },
+        {
+           "offset": 2,
+           "chairs": {
+               "front": [true,true],
+               "back": [true,-true]
+               
+           }
+        },
+        {
+          "offset": 3,
+          "chairs": {
+              "front": [true,true],
+              "back": [true,-true]
+              
+          }
+        },
+        {
+          "offset": 4,
+          "chairs": {
+              "front": [true,true],
+              "back": [true,-true]
+          
+          }
+        },
         ],
-        [
-            {
-                "offset": 1,
-                "chairs": [0,0,1,0]
-            }
-        ],
-        [
-            {
-                "offset": 1,
-                "chairs": [0,0,1,0]
-            }
-        ],
+    ],
+    "orphans": [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false
     ]
 }
