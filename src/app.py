@@ -8,9 +8,9 @@ from infer import *
 
 app = Flask(__name__)
 capture = False
-url = "rtsp://143.215.56.113:8080/video/h264"
-
-
+# url = "rtsp://143.215.56.113:8080/video/h264"
+# url = "rtsp://143.215.92.236:8080/video/h264"
+url = "rtsp://143.215.116.154:8080/video/h264"
 @app.route('/')
 def hello_world():
     return('Hello, World!')
@@ -20,6 +20,7 @@ def hello_world():
 def monitor_stream():
     capture = True
     cap = cv2.VideoCapture(url)
+    # cap = cv2.VideoCapture('./inp.mp4')
     ct = 0
     while capture == True:
         # time.sleep(1)
@@ -31,6 +32,7 @@ def monitor_stream():
                               data=base64.b64encode(jpeg))
             setFrame(frame)
             getTables(r.json())
+            getChairs(r.json())
             ct+=1
             continue
         if(ct % 20 == 0):

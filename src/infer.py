@@ -43,7 +43,7 @@ people_coords = []
 tables = {}
 chair_map = {}
 
-previousStates = []
+previousStates = {}
 
 
 def printDDA(dda):
@@ -60,8 +60,24 @@ def printTables():
             chair = table['chairs'][cid]
             print("Key %2s | Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
                   (cid, chair['occupied'], chair['confidence'], *chair['centroid']), end="\n")
+            if cid in previousStates:
+                print(previousStates[cid])
         print("------------------------------------")
         print("\n")
+
+def storeState():
+    for key in tables:
+        table = tables[key]
+        for cid in table['chairs']:
+            chair = table['chairs'][cid]
+            if not chair['occupied']:
+                previousStates[cid] = []
+            if not cid in previousStates:
+                previousStates[cid] = [chair['occupied']]
+            else:
+                previousStates[cid].append(chair['occupied'])
+                if len(previousStates[cid]) > 4:
+                    previousStates[cid] = previousStates[cid][1:]
 
 
 def printOccupied():
@@ -71,17 +87,22 @@ def printOccupied():
         table = tables[key]
         for cid in table['chairs']:
             chair = table['chairs'][cid]
-            if chair['occupied']:
-                # print("Key %2s | Confidence %2f | Time %s | Centroid %0.2d, %0.2d" %
-                #       (key, table['confidence'], str(table['time']), *table['centroid']), end="\n")
-                # print("Key %2s | Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
-                #       (cid, chair['occupied'], chair['confidence'], *chair['centroid']), end="\n")
-                c_t.append(table['centroid'])
-                c_ch.append(chair['centroid'])
-                # print("------------------------------------")
-                # print("\n")
+            if cid in previousStates:
+                count = 0
+                for val in previousStates[cid]:
+                    if val:
+                        count += 1
+                if count >= 4:
+                    # print("Key %2s | Confidence %2f | Time %s | Centroid %0.2d, %0.2d" %
+                    #       (key, table['confidence'], str(table['time']), *table['centroid']), end="\n")
+                    # print("Key %2s | Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
+                    #       (cid, chair['occupied'], chair['confidence'], *chair['centroid']), end="\n")
+                    c_t.append(table['centroid'])
+                    c_ch.append(chair['centroid']+[cid])
+                    # print("------------------------------------")
+                    # print("\n")
     if len(c_ch) > 0:
-        drawBox(c_ch)
+        drawBox(c_ch, 1)
         # drawLine(c_ch, c_t)
 
 
@@ -98,7 +119,7 @@ def cleanChairs():
             chairs.append(temp)
         chairs.sort(key=lambda x: x['centroid'][0])
         for i in range(len(chairs)-1):
-            if(dist(*chairs[i]['centroid'], *chairs[i+1]['centroid'])) > 30:
+            if(dist(*chairs[i]['centroid'], *chairs[i+1]['centroid'])) > 10:
                 new_chairs[chairs[i]["key"]] = chairs[i]
         new_chairs[chairs[-1]["key"]] = chairs[-1]
         table['chairs'] = new_chairs
@@ -136,12 +157,21 @@ def mapChairToTable():
     # print("Mapping chairs done")
 
 
+def clearOccupied():
+    for id in tables:
+        table = tables[id]
+        for cid in table['chairs']:
+            chair = table['chairs'][cid]
+            chair['occupied'] = False
+
+
 def mapPeopleToChairs():
-    # print("People----------------\n")
+    print("People----------------\n")
+    numberOfP = 0
+    clearOccupied()
     for person in people_coords:
-        if person[4] < 0.7:
-            continue
         c = centroid(person[0], person[1], person[2], person[3])
+        print(c)
         flag = False
         for id in tables:
             table = tables[id]
@@ -149,50 +179,63 @@ def mapPeopleToChairs():
                 chair = table['chairs'][cid]
                 # print(abs(c[0]-chair['centroid'][0]),
                 #       abs(c[1]-chair['centroid'][1]))
-                if dist(*c, *chair['centroid']) < 30:
+                if dist(*c, *chair['centroid']) < 50:
+                    numberOfP += 1
                     chair['occupied'] = True
                     table['time'] = time.strftime("%H")
                     table['num'] += 1
                     flag = True
                     break
+                else:
+                    previousStates[cid] = []
             if flag:
                 break
+    print(numberOfP)
+    print("--------------------------------")
 
 
 def getTables(boxes):
     global tables
+    list_t = []
     for coords in boxes[61]:
-        if(coords[4] > .7):
+        if(coords[4] > 0.6):
+            print(coords[4])
             c = centroid(*coords[0: 4])
-            tables[tableID()] = {'centroid': c, 'chairs': {}, 'num': 0,
-                                 'confidence': coords[4], 'range': dist(coords[0], coords[1], *c)}
+            tid = tableID()
+            tables[tid] = {'centroid': c, 'chairs': {}, 'num': 0,
+                           'confidence': coords[4], 'range': dist(coords[0], coords[1], *c)}
+            list_t.append(c+[tid])
     orphan_table = {'centroid': [-1, -1], 'num': -1, 'chairs': {}, 'confidence': -1,
                     'range': -1}
     tables["orphan"] = orphan_table
-
+    drawBox(list_t, 0)
     # print(tables, end="\n\n")
 
 
 def getChairs(boxes):
+    list_c  =[]
     for chair in boxes[57]:
-        if(chair[4] > .7):
-            flag = False
+        if(chair[4] > .6):
+            # flag = False
             c = centroid(chair[0], chair[1], chair[2], chair[3])
-            for key in tables:
-                table = tables[key]
-                for cid in table['chairs']:
-                    old_chair = table['chairs'][cid]
-                    if(dist(*old_chair['centroid'], *c)) < 30:
-                        old_chair['centroid'] = c
-                        flag = True
-                        break
-                if flag:
-                    break
-            if flag:
-                continue
+            list_c.append(c+["C"])
+            # for key in tables:
+            #     table = tables[key]
+            #     for cid in table['chairs']:
+            #         old_chair = table['chairs'][cid]
+            #         if(dist(*old_chair['centroid'], *c)) < 10:
+            #             old_chair['centroid'] = c
+            #             flag = True
+            #             break
+            #     if flag:
+            #         break
+            # if flag:
+            #     continue
             chair_coords.append(chair)
     # print(len(chair_coords))
     # print(chairs, end="\n\n")
+    drawBox(list_c, 0)
+    mapChairToTable()
 
 
 def getPeople(boxes):
@@ -217,7 +260,7 @@ def setFrame(input):
     frame = input
 
 
-def drawBox(list_c):
+def drawBox(list_c, flag):
     # Create figure and axes
     _, ax = plt.subplots(1)
     # Display the image
@@ -228,7 +271,11 @@ def drawBox(list_c):
             (c[0]-20, c[1]-20), 40, 40, linewidth=1, edgecolor='r', facecolor='none')
         # Add the patch to the Axes
         ax.add_patch(rect)
-    s = "./output/"+str(time.time())+".jpg"
+        plt.text(c[0], c[1], c[2], bbox=dict(facecolor='red', alpha=0.5))
+    if flag == 1:
+        s = "./output/"+str(time.time())+".jpg"
+    else:
+        s = "./output/tables/"+str(time.time())+".jpg"
     plt.savefig(s)
     plt.close()
 
@@ -265,7 +312,7 @@ def generateDataset():
                     start_time = x["time"].hour*60+x["time"].minute
                     f.write("{},{},{},{}".format(
                         occupied_for, x["num"], x["table_id"], start_time))
-                elif (id not in chair_map) and chair["occupied"]:
+                elif (id not in chair_map) and chair["occupied"] and len(previousStates[id])>=4:
                     print(
                         "--------------Just occupied!------------------------------")
                     print("Chair id %s" % (str(id)))
@@ -317,7 +364,8 @@ def getAppData(use_case):
             if(tid == 'orphan'):
                 # print(tables[tid]['chairs'])
                 for cid in tables[tid]['chairs']:
-                    result['orphans'].append(tables[tid]['chairs'][cid]['occupied']) 
+                    result['orphans'].append(
+                        tables[tid]['chairs'][cid]['occupied'])
             else:
                 sorted_tables.append(tables[tid])
         sorted_tables.sort(key=lambda x: -x['centroid'][1])
@@ -360,11 +408,12 @@ def getAppData(use_case):
 
 def run(boxes):
     clearTemp()
-    getChairs(boxes)
+    # getChairs(boxes)
     getPeople(boxes)
-    mapChairToTable()
-    cleanChairs()
+    # mapChairToTable()
+    # cleanChairs()
     mapPeopleToChairs()
-    # printTables()
-    # printOccupied()
+    storeState()
+    printTables()
+    printOccupied()
     generateDataset()
