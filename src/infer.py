@@ -72,6 +72,7 @@ def storeState():
             chair = table['chairs'][cid]
             if not chair['occupied']:
                 previousStates[cid] = []
+                continue
             if not cid in previousStates:
                 previousStates[cid] = [chair['occupied']]
             else:
@@ -88,11 +89,12 @@ def printOccupied():
         for cid in table['chairs']:
             chair = table['chairs'][cid]
             if cid in previousStates:
-                count = 0
-                for val in previousStates[cid]:
-                    if val:
-                        count += 1
-                if count >= 4:
+                # count = 0
+                print(str(len(previousStates[cid]))+"-"+str(cid))
+                # for val in previousStates[cid]:
+                #     if val:
+                #         count += 1
+                if len(previousStates[cid]) >= 4:
                     # print("Key %2s | Confidence %2f | Time %s | Centroid %0.2d, %0.2d" %
                     #       (key, table['confidence'], str(table['time']), *table['centroid']), end="\n")
                     # print("Key %2s | Occupied: %s | Confidence %2f | Centroid %0.2d, %0.2d" %
@@ -179,15 +181,13 @@ def mapPeopleToChairs():
                 chair = table['chairs'][cid]
                 # print(abs(c[0]-chair['centroid'][0]),
                 #       abs(c[1]-chair['centroid'][1]))
-                if dist(*c, *chair['centroid']) < 50:
+                if dist(*c, *chair['centroid']) < 60:
                     numberOfP += 1
                     chair['occupied'] = True
                     table['time'] = time.strftime("%H")
                     table['num'] += 1
                     flag = True
                     break
-                else:
-                    previousStates[cid] = []
             if flag:
                 break
     print(numberOfP)
@@ -415,5 +415,5 @@ def run(boxes):
     mapPeopleToChairs()
     storeState()
     printTables()
-    printOccupied()
-    generateDataset()
+    # printOccupied()
+    # generateDataset()
