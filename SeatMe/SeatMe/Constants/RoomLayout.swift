@@ -27,3 +27,11 @@ struct Table: Decodable {
 struct RoomLayout: Decodable {
     let tables: [Table]
 }
+
+struct Table2: Decodable {
+    let offset: Int
+    let chairs: [Int]
+}
+struct RoomLayout2: Decodable {
+    let tables: [[Table2]]
+}
