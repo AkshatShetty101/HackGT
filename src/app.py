@@ -9,8 +9,8 @@ from infer import *
 app = Flask(__name__)
 capture = False
 # url = "rtsp://143.215.56.113:8080/video/h264"
-# url = "rtsp://143.215.92.236:8080/video/h264"
-url = "rtsp://143.215.116.154:8080/video/h264"
+url = "rtsp://143.215.92.236:8080/video/h264"
+# url = "rtsp://143.215.116.154:8080/video/h264"
 @app.route('/')
 def hello_world():
     return('Hello, World!')
