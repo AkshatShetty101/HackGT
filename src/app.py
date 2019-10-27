@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import cv2
 import requests
 import base64
@@ -29,6 +29,7 @@ def monitor_stream():
             ret, jpeg = cv2.imencode('.jpg', frame)
             r = requests.post(url="http://34.83.136.245:5000",
                               data=base64.b64encode(jpeg))
+            setFrame(frame)
             getTables(r.json())
             ct+=1
             continue
@@ -46,6 +47,10 @@ def monitor_stream():
     cap.release()
     cv2.destroyAllWindows()
 
+@app.route('/layout', methods=['GET'])
+def getLayout():
+    use_case = request.args.get("id")
+    return getAppData(use_case)
 
 @app.route('/stop_monitor_stream')
 def stop_monitor_stream():

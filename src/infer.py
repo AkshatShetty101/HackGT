@@ -43,6 +43,8 @@ people_coords = []
 tables = {}
 chair_map = {}
 
+previousStates = []
+
 
 def printDDA(dda):
     for arr in dda:
@@ -103,8 +105,8 @@ def cleanChairs():
 
 
 def mapChairToTable():
-    print("Mapping chairs started")
-    print(len(tables["orphan"]["chairs"]))
+    # print("Mapping chairs started")
+    # print(len(tables["orphan"]["chairs"]))
     not_orphans = set()
     for tid in tables:
         table = tables[tid]
@@ -122,16 +124,17 @@ def mapChairToTable():
             if(gap < min):
                 not_orphans.add(str(c[0])+" "+str(c[1]))
                 table['chairs'][chairID()] = {'centroid': c, 'confidence': chair[4],
-                                                 'occupied': False}
+                                              'occupied': False}
     if len(not_orphans)-len(chair_coords) == 0:
         return
     for chair in chair_coords:
         c = centroid(chair[0], chair[1], chair[2], chair[3])
         if str(c[0])+" "+str(c[1]) not in not_orphans:
             tables["orphan"]['chairs'][chairID()] = {'centroid': c, 'confidence': chair[4],
-                                                        'occupied': False}
-    print(len(tables["orphan"]["chairs"]))
-    print("Mapping chairs done")
+                                                     'occupied': False}
+    # print(len(tables["orphan"]["chairs"]))
+    # print("Mapping chairs done")
+
 
 def mapPeopleToChairs():
     # print("People----------------\n")
@@ -162,7 +165,7 @@ def getTables(boxes):
         if(coords[4] > .7):
             c = centroid(*coords[0: 4])
             tables[tableID()] = {'centroid': c, 'chairs': {}, 'num': 0,
-                                    'confidence': coords[4], 'range': dist(coords[0], coords[1], *c)}
+                                 'confidence': coords[4], 'range': dist(coords[0], coords[1], *c)}
     orphan_table = {'centroid': [-1, -1], 'num': -1, 'chairs': {}, 'confidence': -1,
                     'range': -1}
     tables["orphan"] = orphan_table
@@ -180,7 +183,7 @@ def getChairs(boxes):
                 for cid in table['chairs']:
                     old_chair = table['chairs'][cid]
                     if(dist(*old_chair['centroid'], *c)) < 30:
-                        old_chair['centroid'] = c     
+                        old_chair['centroid'] = c
                         flag = True
                         break
                 if flag:
@@ -243,6 +246,7 @@ def drawLine(list_c1, list_c2):
     plt.savefig(s)
     plt.close()
 
+
 def generateDataset():
     tf = "./output/data.csv"
     with open(tf, "w+") as f:
@@ -288,17 +292,71 @@ def clearTemp():
 
 def tableID():
     global table_counter
-    table_counter+=1
+    table_counter += 1
     return table_counter
+
 
 def chairID():
     global chair_counter
     chair_counter = chr(ord(chair_counter)+1)
     return chair_counter
 
-# def getAppData(use_case):
-#     if use_case === 1:
-#         for 
+
+def getAppData(use_case):
+    global tables, frame
+    result = {
+        'tables': [],
+        'orphans': []
+    }
+    width, height, _ = np.shape(frame)
+    if use_case == "1":
+        result['tables'] = [[], []]
+        result['orphans'] = []
+        sorted_tables = []
+        for tid in tables:
+            if(tid == 'orphan'):
+                # print(tables[tid]['chairs'])
+                for cid in tables[tid]['chairs']:
+                    result['orphans'].append(tables[tid]['chairs'][cid]['occupied']) 
+            else:
+                sorted_tables.append(tables[tid])
+        sorted_tables.sort(key=lambda x: -x['centroid'][1])
+        for i, t in enumerate(sorted_tables):
+            offset = int(t['centroid'][0]/(width/3))
+            # print(offset, t['centroid'])
+            sorted_chairs = []
+            for cid in t['chairs']:
+                sorted_chairs.append(t['chairs'][cid])
+            sorted_chairs.sort(key=lambda x: -x['centroid'][1])
+            back = []
+            front = []
+            for i, chairs in enumerate(sorted_chairs):
+                if chairs['centroid'][1] > t['centroid'][1]:
+                    back.append(chairs)
+                else:
+                    front.append(chairs)
+            back.sort(key=lambda x: x['centroid'][0])
+            front.sort(key=lambda x: x['centroid'][0])
+            if i == 0:
+                result['tables'][0].append({
+                    'offset': offset,
+                    'chairs': {
+                        'back': [a['occupied'] for a in back],
+                        'front': [a['occupied'] for a in front]
+                    }
+                })
+            else:
+                result['tables'][1].append({
+                    'offset': offset,
+                    'chairs': {
+                        'back': [a['occupied'] for a in back],
+                        'front': [a['occupied'] for a in front]
+                    }
+                })
+        print(result)
+        return result
+    return ""
+
 
 def run(boxes):
     clearTemp()
@@ -307,6 +365,6 @@ def run(boxes):
     mapChairToTable()
     cleanChairs()
     mapPeopleToChairs()
-    printTables()
-    printOccupied()
+    # printTables()
+    # printOccupied()
     generateDataset()
