@@ -7,6 +7,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+SitME.mov
 .Python
 build/
 develop-eggs/

@@ -32,11 +32,18 @@ class RoomSeatsVC: UIViewController {
         view.addSubview(makeLayoutHeaderView())
         seatsView = UIScrollView(frame: CGRect(x: 10, y: 50, width: UIScreen.main.bounds.width - 10, height: UIScreen.main.bounds.height/2))
         view.addSubview(seatsView!)
+        seatsView?.contentSize = CGSize(width: 10000, height: 10000)
+        
+//        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { (timer) in
+//            self.makeSeatsView()
+//        })
+        
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { (timer) in
-            self.makeSeatsView()
+            self.makeBSSeatsView()
+
         })
 //        makeSeatsView()
-        
+//        readAndSetBSLayout()
         view.addSubview(makeFacilitiesHeaderView())
         view.addSubview(makeTableView())
     }
@@ -57,6 +64,78 @@ class RoomSeatsVC: UIViewController {
         title.textAlignment = .center
         title.textColor = darkGrey
         return title
+    }
+    
+    
+    func readAndSetBSLayout(layout: RoomLayout3) {
+//        let layout = readLayout3()
+//        guard let layoutUnwrapped = layout else { return }
+        for table in layout.tables {
+            for icon in makeBSImageView(table: table) {
+                seatsView?.addSubview(icon)
+            }
+        }
+    }
+    
+    func makeBSImageView(table: Table3) -> [UIImageView] {
+        let tableIcon = UIImage(named: AssetFileNames.Table.rawValue)
+        let TABLE_HEIGHT = 50
+        let TABLE_WIDTH = 25
+        let tx = table.centroid.x
+        let ty = table.centroid.y
+        
+        var icons: [UIImageView] = []
+        
+        let tableIconView = UIImageView(frame: CGRect(x:  tx - TABLE_WIDTH, y: ty - TABLE_HEIGHT, width: 2*TABLE_WIDTH , height: 2*TABLE_HEIGHT))
+        tableIconView.image = tableIcon
+        icons.append(tableIconView)
+//        var left: Chair3 = []
+//        var right: Chair3 = []
+        for chair in table.chairs {
+            var chairImageView: UIImageView
+            var x = 0
+            var y = 0
+            if chair.centroid.x < tx && chair.centroid.y < ty {
+                 x = tx - TABLE_WIDTH
+                 y = ty - 20
+            }
+            if chair.centroid.x < tx && chair.centroid.y >= ty {
+                x = tx - TABLE_WIDTH
+                y = ty + 20
+            }
+            if chair.centroid.x > tx && chair.centroid.y < ty {
+                x = tx + TABLE_WIDTH
+                y = ty - 20
+            }
+            if chair.centroid.x >= tx && chair.centroid.y > ty {
+                x = tx + TABLE_WIDTH
+                y = ty + 20
+            }
+            chairImageView = drawBSChair(x: x, y: y)
+            chairImageView.image = chairImageView.image?.withRenderingMode(.alwaysTemplate)
+            chairImageView.tintColor = chair.occupied ? disabledRed : confirmGreen
+            icons.append(chairImageView)
+        }
+        
+        return icons
+    }
+    
+    func drawBSChair(x: Int, y: Int) -> UIImageView {
+        let CHAIR_HEIGHT = 10
+        let CHAIR_WIDTH = 10
+        let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
+        let chairIconView = UIImageView(frame: CGRect(x: x - CHAIR_WIDTH, y: y - CHAIR_HEIGHT, width: 2*CHAIR_WIDTH, height: 2*CHAIR_HEIGHT))
+        chairIconView.image = chairIcon
+        return chairIconView
+    }
+    
+    func makeBSSeatsView() {
+        seatsView!.subviews.forEach({ $0.removeFromSuperview() })
+        let _ = fetchBSLayout { (layout) in
+            DispatchQueue.main.async {
+                self.readAndSetBSLayout(layout: layout)
+            }
+        }
     }
     
     func makeSeatsView() {
@@ -311,6 +390,26 @@ extension RoomSeatsVC: UITableViewDataSource {
                 let data = try JSONDecoder().decode(RoomLayout2.self, from: data)
                 completion(data)
                } catch let jsonErr {
+                   print("Error reading the data file.")
+                   print(jsonErr.localizedDescription)
+               }
+        }
+
+        task.resume()
+    }
+    
+    
+    func fetchBSLayout(completion: @escaping (RoomLayout3) -> ()) {
+        let url = URL(string: "http://127.0.0.1:5000/layout?id=1")!
+
+        let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
+            guard let data = data else { return }
+            do {
+                print(String(data: data, encoding: .utf8)!)
+                let data = try JSONDecoder().decode(RoomLayout3.self, from: data)
+                completion(data)
+               } catch let jsonErr {
+               
                    print("Error reading the data file.")
                    print(jsonErr.localizedDescription)
                }

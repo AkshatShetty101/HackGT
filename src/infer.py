@@ -201,7 +201,7 @@ def getTables(boxes):
     global tables
     list_t = []
     for coords in boxes[61]:
-        if(coords[4] > 0.6):
+        if(coords[4] > 0.7):
             print(coords[4])
             c = centroid(*coords[0: 4])
             tid = tableID()
@@ -218,7 +218,7 @@ def getTables(boxes):
 def getChairs(boxes):
     list_c = []
     for chair in boxes[57]:
-        if(chair[4] > .6):
+        if(chair[4] > .7):
             # flag = False
             c = centroid(chair[0], chair[1], chair[2], chair[3])
             list_c.append(c+["C"])
@@ -438,7 +438,7 @@ def getAppData(use_case):
     #             })
     #     print(result)
     #     return result
-    return json.dumps(result)
+    return result
 
 
 def run(boxes):

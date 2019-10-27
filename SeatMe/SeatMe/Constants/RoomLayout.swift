@@ -41,3 +41,31 @@ struct RoomLayout2: Decodable {
     let tables: [[Table2]]
     let orphans: [Bool]?
 }
+
+
+struct Centroid: Decodable {
+    let x: Int
+    let y: Int
+}
+
+struct Chair3: Decodable {
+    let cid: String
+    let centroid: Centroid
+    let occupied: Bool
+}
+
+struct Size: Decodable {
+    let w: Int
+    let h: Int
+}
+
+struct Table3: Decodable {
+    let tid: Int
+    let centroid: Centroid
+    let chairs: [Chair3]
+}
+
+struct RoomLayout3: Decodable {
+    let size: Size
+    let tables: [Table3]
+}
