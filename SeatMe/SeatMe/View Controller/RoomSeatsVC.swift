@@ -148,7 +148,7 @@ class RoomSeatsVC: UIViewController {
         return iconView
     }
     
-    func makeImageView2(rowNumber: Int, offset: Int, chairs: [Int] ) -> [UIImageView] {
+    func makeImageView2(rowNumber: Int, offset: Int, chairs: Chairs2 ) -> [UIImageView] {
       
         
         var imageViews: [UIImageView] = []
@@ -159,42 +159,73 @@ class RoomSeatsVC: UIViewController {
         
         var yOffset = rowNumber*(TABLE_ICON_HEIGHT+2*CHAIR_ICON_HEIGHT)+GUTTER_HEIGHT
         
-        if chairs[0] != -1 {
+        var colCount = 0
+        for chair in chairs.front {
+            if colCount == 2 {
+                break;
+            }
             let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-            let chairIconView = UIImageView(frame: CGRect(x: offset*100+20, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
+            let chairIconView = UIImageView(frame: CGRect(x: offset*100+20*(colCount+1)+10*colCount, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
             chairIconView.image = chairIcon
             chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-            chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
+            chairIconView.tintColor = !chair ? confirmGreen : disabledRed
             imageViews.append(chairIconView)
+            
+            colCount += 1
+//            if chairs[1] != -1 {
+//                let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
+//                let chairIconView = UIImageView(frame: CGRect(x: offset*100+50, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
+//                chairIconView.image = chairIcon
+//                chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
+//                chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
+//                imageViews.append(chairIconView)
+//            }
         }
         
-        if chairs[1] != -1 {
-            let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-            let chairIconView = UIImageView(frame: CGRect(x: offset*100+50, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
-            chairIconView.image = chairIcon
-            chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-            chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
-            imageViews.append(chairIconView)
-        }
 
         yOffset = (rowNumber+1)*(TABLE_ICON_HEIGHT+CHAIR_ICON_HEIGHT) + rowNumber*CHAIR_ICON_HEIGHT - GUTTER_HEIGHT
-        if chairs[2] != -1 {
+        
+        colCount = 0
+        for chair in chairs.back {
+            if colCount == 2 {
+                break;
+            }
+
             let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-            let chairIconView = UIImageView(frame: CGRect(x: offset*100+20, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
+            let chairIconView = UIImageView(frame: CGRect(x: offset*100+20*(colCount+1)+10*colCount, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
             chairIconView.image = chairIcon
             chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-            chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
+            chairIconView.tintColor = !chair ? confirmGreen : disabledRed
             imageViews.append(chairIconView)
+                
+            colCount += 1
+//            if chairs[1] != -1 {
+//                let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
+//                let chairIconView = UIImageView(frame: CGRect(x: offset*100+50, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
+//                chairIconView.image = chairIcon
+//                chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
+//                chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
+//                imageViews.append(chairIconView)
+//            }
         }
         
-        if chairs[3] != -1 {
-            let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
-            let chairIconView = UIImageView(frame: CGRect(x: offset*100+50, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
-            chairIconView.image = chairIcon
-            chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
-            chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
-            imageViews.append(chairIconView)
-        }
+//        if chairs[2] != -1 {
+//            let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
+//            let chairIconView = UIImageView(frame: CGRect(x: offset*100+20, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
+//            chairIconView.image = chairIcon
+//            chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
+//            chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
+//            imageViews.append(chairIconView)
+//        }
+//
+//        if chairs[3] != -1 {
+//            let chairIcon = UIImage(named: AssetFileNames.Chair.rawValue)
+//            let chairIconView = UIImageView(frame: CGRect(x: offset*100+50, y: yOffset, width: CHAIR_ICON_WIDTH, height: CHAIR_ICON_HEIGHT))
+//            chairIconView.image = chairIcon
+//            chairIconView.image = chairIconView.image?.withRenderingMode(.alwaysTemplate)
+//            chairIconView.tintColor = chairs[0] == 0 ? confirmGreen : disabledRed
+//            imageViews.append(chairIconView)
+//        }
                
         return imageViews
     }

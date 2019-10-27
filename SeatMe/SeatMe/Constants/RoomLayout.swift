@@ -28,9 +28,14 @@ struct RoomLayout: Decodable {
     let tables: [Table]
 }
 
+struct Chairs2: Decodable {
+    let front: [Bool]
+    let back: [Bool]
+}
+
 struct Table2: Decodable {
     let offset: Int
-    let chairs: [Int]
+    let chairs: Chairs2
 }
 struct RoomLayout2: Decodable {
     let tables: [[Table2]]
